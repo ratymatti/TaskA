@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.UI;
+using TMPro;
 
 [RequireComponent(typeof(CharacterController))]
 public class PenguinCollisionHandler : MonoBehaviour
@@ -12,9 +14,22 @@ public class PenguinCollisionHandler : MonoBehaviour
     private Collider carriedCollider;
     private Rigidbody carriedRigidbody;
 
+    public GameObject carriedItemUIParent;
+    public Image itemIconUI;
+    public TMP_Text itemLabelUI;
+
+    public Sprite ductTapeIcon;
+    public Sprite crowbarIcon;
+    public Sprite toolboxIcon;
+    public Sprite flashlightIcon;
+
     void Start()
     {
         controller = GetComponent<CharacterController>();
+
+        // Hide UI before picking up anything
+        if (carriedItemUIParent != null)
+            carriedItemUIParent.SetActive(false);
     }
 
     void OnControllerColliderHit(ControllerColliderHit hit)
@@ -30,15 +45,17 @@ public class PenguinCollisionHandler : MonoBehaviour
             carriedRigidbody = kannettavaEsine.GetComponent<Rigidbody>();
             if (carriedRigidbody)
             {
-                // STOP motion BEFORE making kinematic
-#pragma warning disable CS0618 // Type or member is obsolete
+#pragma warning disable CS0618
                 carriedRigidbody.velocity = Vector3.zero;
-#pragma warning restore CS0618 // Type or member is obsolete
+#pragma warning restore CS0618
                 carriedRigidbody.angularVelocity = Vector3.zero;
 
                 carriedRigidbody.isKinematic = true;
                 carriedRigidbody.useGravity = false;
             }
+
+            // Show UI and update icon/text
+            UpdateItemUI(hit.gameObject.name);
         }
     }
 
@@ -61,13 +78,49 @@ public class PenguinCollisionHandler : MonoBehaviour
                 carriedRigidbody.useGravity = true;
             }
 
-            // Drop above ground
             Vector3 dropPos = transform.TransformPoint(Vector3.forward * dropDistance + Vector3.up * 0.5f);
             kannettavaEsine.position = dropPos;
 
+            // Clear carried item
             kannettavaEsine = null;
             carriedCollider = null;
             carriedRigidbody = null;
+
+            // Hide UI when dropping item
+            carriedItemUIParent.SetActive(false);
+        }
+    }
+
+    void UpdateItemUI(string itemName)
+    {
+        // Show parent UI
+        carriedItemUIParent.SetActive(true);
+
+        switch (itemName)
+        {
+            case "Ilmastointiteippi":
+                itemIconUI.sprite = ductTapeIcon;
+                itemLabelUI.text = "TEIPPI";
+                break;
+
+            case "Tyokalupakki":
+                itemIconUI.sprite = toolboxIcon;
+                itemLabelUI.text = "TYÖKALUPAKKI";
+                break;
+
+            case "Sorkkarauta":
+                itemIconUI.sprite = crowbarIcon;
+                itemLabelUI.text = "SORKKARAUTA";
+                break;
+
+            case "Taskulamppu":
+                itemIconUI.sprite = flashlightIcon;
+                itemLabelUI.text = "TASKULAMPPU";
+                break;
+
+            default:
+                itemLabelUI.text = "";
+                break;
         }
     }
 }
